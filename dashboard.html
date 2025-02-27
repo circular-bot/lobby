@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="top-bar">
+        <span>Welcome, <span id="user"></span></span>
+        <button onclick="showChangePasswordModal()">Change Password</button>
+        <button id="settingsBtn" onclick="window.location.href='settings.html'" style="display: none;">Settings</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    <div class="button-container">
+        <button onclick="window.location.href='circular.html'" data-id="1">Circular</button>
+        <button onclick="window.location.href='database.html'" data-id="2">Database</button>
+        <button data-id="3">Button 3</button>
+        <button data-id="4">Button 4</button>
+        <button data-id="5">Button 5</button>
+        <button data-id="6">Button 6</button>
+        <button data-id="7">Button 7</button>
+        <button data-id="8">Button 8</button>
+        <button data-id="9">Button 9</button>
+        <button data-id="10">Button 10</button>
+    </div>
+
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <h3>Change Password</h3>
+            <input type="password" id="currentPassword" placeholder="Current Password" required>
+            <input type="password" id="newPassword" placeholder="New Password" required>
+            <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required>
+            <button onclick="changePassword()">Submit</button>
+            <button onclick="hideChangePasswordModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const username = localStorage.getItem('username');
+        const criteria = localStorage.getItem('criteria');
+        if (!username || !criteria) window.location.href = 'login.html';
+        document.getElementById('user').textContent = username;
+
+        // Show Settings button only for cms_user
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (username === 'cms_user') {
+            settingsBtn.style.display = 'block';
+        } else {
+            settingsBtn.style.display = 'none';
+        }
+
+        fetch('/settings')
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch settings');
+                return response.json();
+            })
+            .then(settings => applySettings(settings))
+            .catch(error => console.error('Error loading settings:', error));
+
+        function applySettings(settings) {
+            const allowedButtons = settings[criteria] || [];
+            const buttons = document.querySelectorAll('.button-container button');
+            buttons.forEach(btn => {
+                const btnId = btn.getAttribute('data-id');
+                btn.style.display = allowedButtons.includes(btnId) ? 'block' : 'none';
+                if (allowedButtons.includes(btnId)) {
+                    btn.style.animationDelay = `${Array.from(buttons).filter(b => b.style.display !== 'none').indexOf(btn) * 0.1}s`;
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        function showChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'flex';
+        }
+
+        function hideChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword !== confirmNewPassword) {
+                alert('New password and confirmation do not match.');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('New password must be at least 6 characters long.');
+                return;
+            }
+
+            fetch('/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, currentPassword, newPassword })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`Failed to change password: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Password changed successfully!');
+                    hideChangePasswordModal();
+                } else {
+                    alert('Failed to change password: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error changing password:', error);
+                alert('Error changing password: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>

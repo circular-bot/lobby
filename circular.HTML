@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Circular</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="top-buttons">
+        <input type="file" id="fileInput" accept=".pdf">
+        <button onclick="document.getElementById('fileInput').click()">Browse</button>
+        <select id="categorySelect">
+            <option value="SAFETY">SAFETY</option>
+            <option value="TECHNICAL">TECHNICAL</option>
+            <option value="OTHER">OTHER</option>
+        </select>
+        <button onclick="uploadFile()">Submit</button>
+        <button onclick="window.location.href='/dashboard.html'">Back to Dashboard</button>
+    </div>
+    <div class="upload-list" id="uploadList"></div>
+
+    <script>
+        const locations = ['CMS', 'BSP', 'AKT', 'BRJN', 'RIG', 'KRBA', 'USL', 'PND', 'SDL', 'BJRI', 'SJQ'];
+        const userLobby = localStorage.getItem('lobby') || 'CMS';
+        const isCMS = userLobby === 'CMS';
+
+        if (!localStorage.getItem('username')) {
+            window.location.href = '/';
+        }
+
+        window.onload = function() {
+            loadUploads();
+        };
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const categorySelect = document.getElementById('categorySelect');
+            if (fileInput.files.length === 0) {
+                alert('Please select a file');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const username = localStorage.getItem('username');
+            const selectedCategory = categorySelect.value;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('username', username);
+            formData.append('category', selectedCategory);
+            formData.append('checkboxes', JSON.stringify(locations.reduce((acc, loc) => ({ ...acc, [loc]: false }), {})));
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server responded with ${response.status}: ${errorText}`);
+                }
+                const data = await response.json();
+                if (data.success) {
+                    await loadUploads();
+                    fileInput.value = '';
+                    alert('Upload Done');
+                } else {
+                    alert('Upload failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error uploading file: ' + error.message);
+            }
+        }
+
+        async function deleteUpload(index) {
+            try {
+                const response = await fetch('/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ index })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    await loadUploads();
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+            }
+        }
+
+        async function loadUploads() {
+            try {
+                const response = await fetch('/uploads');
+                if (!response.ok) throw new Error('Failed to fetch uploads');
+                const uploads = await response.json();
+                const uploadList = document.getElementById('uploadList');
+                uploadList.innerHTML = '';
+
+                uploads.forEach((upload, index) => {
+                    const uploadItem = document.createElement('div');
+                    uploadItem.className = 'upload-item';
+
+                    const fileInfo = document.createElement('div');
+                    fileInfo.innerHTML = `
+                        <strong>File:</strong> <a href="${upload.fileURL}" class="download-link">${upload.fileName}</a><br>
+                        <strong>Uploaded by:</strong> ${upload.uploadedBy}<br>
+                        Date: ${upload.dateTime}<br>
+                        <strong>Category:</strong> ${upload.category || 'Not specified'}
+                    `;
+
+                    const checkboxGroup = document.createElement('div');
+                    checkboxGroup.className = 'checkbox-group';
+
+                    const visibleLocations = isCMS ? locations : [userLobby];
+                    visibleLocations.forEach(location => {
+                        const checkbox = document.createElement('div');
+                        const checkboxId = `${location}_${index}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                        const isChecked = upload.checkboxes[location] || false;
+                        checkbox.innerHTML = `
+                            <input type="checkbox" id="${checkboxId}" name="${location}" ${isChecked ? 'checked' : ''} ${location !== userLobby && !isCMS ? 'disabled' : ''}>
+                            <label for="${checkboxId}">${location}</label>
+                        `;
+                        checkboxGroup.appendChild(checkbox);
+
+                        checkbox.querySelector('input').addEventListener('change', async function() {
+                            await fetch('/update-checkboxes', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ index, location, checked: this.checked })
+                            });
+                        });
+                    });
+
+                    if (isCMS) {
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'delete-btn';
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.onclick = () => deleteUpload(index);
+                        uploadItem.appendChild(deleteButton);
+                    }
+
+                    uploadItem.appendChild(fileInfo);
+                    uploadItem.appendChild(checkboxGroup);
+                    uploadList.appendChild(uploadItem);
+                });
+            } catch (error) {
+                console.error('Load error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

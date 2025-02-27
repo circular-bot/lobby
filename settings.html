@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="settings-container">
+        <h2>Button Visibility Settings</h2>
+
+        <div class="criteria-section">
+            <h3>Supervisor</h3>
+            <label><input type="checkbox" class="supervisor" value="1">Button 1</label>
+            <label><input type="checkbox" class="supervisor" value="2">Button 2</label>
+            <label><input type="checkbox" class="supervisor" value="3">Button 3</label>
+            <label><input type="checkbox" class="supervisor" value="4">Button 4</label>
+            <label><input type="checkbox" class="supervisor" value="5">Button 5</label>
+            <label><input type="checkbox" class="supervisor" value="6">Button 6</label>
+            <label><input type="checkbox" class="supervisor" value="7">Button 7</label>
+            <label><input type="checkbox" class="supervisor" value="8">Button 8</label>
+            <label><input type="checkbox" class="supervisor" value="9">Button 9</label>
+            <label><input type="checkbox" class="supervisor" value="10">Button 10</label>
+        </div>
+
+        <div class="criteria-section">
+            <h3>CCC</h3>
+            <label><input type="checkbox" class="ccc" value="1">Button 1</label>
+            <label><input type="checkbox" class="ccc" value="2">Button 2</label>
+            <label><input type="checkbox" class="ccc" value="3">Button 3</label>
+            <label><input type="checkbox" class="ccc" value="4">Button 4</label>
+            <label><input type="checkbox" class="ccc" value="5">Button 5</label>
+            <label><input type="checkbox" class="ccc" value="6">Button 6</label>
+            <label><input type="checkbox" class="ccc" value="7">Button 7</label>
+            <label><input type="checkbox" class="ccc" value="8">Button 8</label>
+            <label><input type="checkbox" class="ccc" value="9">Button 9</label>
+            <label><input type="checkbox" class="ccc" value="10">Button 10</label>
+        </div>
+
+        <div class="criteria-section">
+            <h3>Lobby</h3>
+            <label><input type="checkbox" class="lobby" value="1">Button 1</label>
+            <label><input type="checkbox" class="lobby" value="2">Button 2</label>
+            <label><input type="checkbox" class="lobby" value="3">Button 3</label>
+            <label><input type="checkbox" class="lobby" value="4">Button 4</label>
+            <label><input type="checkbox" class="lobby" value="5">Button 5</label>
+            <label><input type="checkbox" class="lobby" value="6">Button 6</label>
+            <label><input type="checkbox" class="lobby" value="7">Button 7</label>
+            <label><input type="checkbox" class="lobby" value="8">Button 8</label>
+            <label><input type="checkbox" class="lobby" value="9">Button 9</label>
+            <label><input type="checkbox" class="lobby" value="10">Button 10</label>
+        </div>
+
+        <div class="criteria-section">
+            <h3>TLC</h3>
+            <label><input type="checkbox" class="tlc" value="1">Button 1</label>
+            <label><input type="checkbox" class="tlc" value="2">Button 2</label>
+            <label><input type="checkbox" class="tlc" value="3">Button 3</label>
+            <label><input type="checkbox" class="tlc" value="4">Button 4</label>
+            <label><input type="checkbox" class="tlc" value="5">Button 5</label>
+            <label><input type="checkbox" class="tlc" value="6">Button 6</label>
+            <label><input type="checkbox" class="tlc" value="7">Button 7</label>
+            <label><input type="checkbox" class="tlc" value="8">Button 8</label>
+            <label><input type="checkbox" class="tlc" value="9">Button 9</label>
+            <label><input type="checkbox" class="tlc" value="10">Button 10</label>
+        </div>
+
+        <!-- Add New User Section (Only for cms_user) -->
+        <div id="addUserSection" class="criteria-section" style="display: none;">
+            <h3>Add New User</h3>
+            <div>
+                <label>Username: <input type="text" id="newUsername" required></label>
+                <label>Password: <input type="password" id="newPassword" required></label>
+                <label>Lobby: 
+                    <select id="newLobby">
+                        <option value="CMS">CMS</option>
+                        <option value="BSP">BSP</option>
+                        <option value="AKT">AKT</option>
+                        <option value="BRJN">BRJN</option>
+                        <option value="RIG">RIG</option>
+                        <option value="KRBA">KRBA</option>
+                        <option value="USL">USL</option>
+                        <option value="PND">PND</option>
+                        <option value="SDL">SDL</option>
+                        <option value="BJRI">BJRI</option>
+                        <option value="SJQ">SJQ</option>
+                    </select>
+                </label>
+                <label>Criteria: 
+                    <select id="newCriteria">
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="CCC">CCC</option>
+                        <option value="Lobby">Lobby</option>
+                        <option value="TLC">TLC</option>
+                    </select>
+                </label>
+                <button onclick="addNewUser()">Add User</button>
+            </div>
+        </div>
+
+        <!-- Delete User Section (Only for cms_user) -->
+        <div id="deleteUserSection" class="criteria-section" style="display: none;">
+            <h3>Delete User</h3>
+            <div id="userList"></div>
+        </div>
+
+        <div style="text-align: center;">
+            <button onclick="saveSettings()">Save Settings</button>
+            <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+        </div>
+    </div>
+
+    <script>
+        const username = localStorage.getItem('username');
+
+        // Show Add/Delete User sections only for cms_user
+        if (username === 'cms_user') {
+            document.getElementById('addUserSection').style.display = 'block';
+            document.getElementById('deleteUserSection').style.display = 'block';
+            loadUserList();
+        }
+
+        // Load saved settings from server
+        fetch('/settings')
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch settings');
+                return response.json();
+            })
+            .then(settings => {
+                document.querySelectorAll('.supervisor').forEach(cb => cb.checked = settings.Supervisor.includes(cb.value));
+                document.querySelectorAll('.ccc').forEach(cb => cb.checked = settings.CCC.includes(cb.value));
+                document.querySelectorAll('.lobby').forEach(cb => cb.checked = settings.Lobby.includes(cb.value));
+                document.querySelectorAll('.tlc').forEach(cb => cb.checked = settings.TLC.includes(cb.value));
+            })
+            .catch(error => console.error('Error loading settings:', error));
+
+        // Save settings to server
+        function saveSettings() {
+            const settings = {
+                Supervisor: Array.from(document.querySelectorAll('.supervisor:checked')).map(cb => cb.value),
+                CCC: Array.from(document.querySelectorAll('.ccc:checked')).map(cb => cb.value),
+                Lobby: Array.from(document.querySelectorAll('.lobby:checked')).map(cb => cb.value),
+                TLC: Array.from(document.querySelectorAll('.tlc:checked')).map(cb => cb.value)
+            };
+
+            fetch('/save-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Settings saved!');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Failed to save settings: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+                alert('Error saving settings: ' + error.message);
+            });
+        }
+
+        // Add new user function (server-side)
+        function addNewUser() {
+            const newUsername = document.getElementById('newUsername').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+            const newLobby = document.getElementById('newLobby').value;
+            const newCriteria = document.getElementById('newCriteria').value;
+
+            if (!newUsername || !newPassword) {
+                alert('Please enter both username and password.');
+                return;
+            }
+
+            const newUser = {
+                username: newUsername,
+                password: newPassword,
+                lobby: newLobby,
+                criteria: newCriteria
+            };
+
+            fetch('/add-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUser)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`Failed to add user: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('New user added successfully!');
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newPassword').value = '';
+                    loadUserList(); // Refresh user list after adding
+                } else {
+                    alert('Failed to add user: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error adding user:', error);
+                alert('Error adding user: ' + error.message);
+            });
+        }
+
+        // Load user list for deletion
+        function loadUserList() {
+            fetch('/users')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch users');
+                    return response.json();
+                })
+                .then(users => {
+                    const userList = document.getElementById('userList');
+                    userList.innerHTML = '';
+                    Object.keys(users).forEach(user => {
+                        if (user !== 'cms_user') { // Prevent deletion of cms_user
+                            const userDiv = document.createElement('div');
+                            userDiv.className = 'user-item';
+                            userDiv.innerHTML = `
+                                ${user} (Password: ${users[user].password}, ${users[user].criteria} - ${users[user].lobby})
+                                <button class="delete-btn" onclick="deleteUser('${user}')">Delete</button>
+                            `;
+                            userList.appendChild(userDiv);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading users:', error));
+        }
+
+        // Delete user function
+        function deleteUser(usernameToDelete) {
+            if (confirm(`Are you sure you want to delete user "${usernameToDelete}"?`)) {
+                fetch('/delete-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameToDelete })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`Failed to delete user: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('User deleted successfully!');
+                        loadUserList(); // Refresh user list after deletion
+                    } else {
+                        alert('Failed to delete user: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting user:', error);
+                    alert('Error deleting user: ' + error.message);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

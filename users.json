@@ -1,0 +1,67 @@
+{
+  "cms_user": {
+    "password": "pass123",
+    "lobby": "CMS",
+    "criteria": "Supervisor"
+  },
+  "akt_user": {
+    "password": "akt123",
+    "lobby": "AKT",
+    "criteria": "Lobby"
+  },
+  "brjn_user": {
+    "password": "brjn123",
+    "lobby": "BRJN",
+    "criteria": "TLC"
+  },
+  "rig_user": {
+    "password": "rig123",
+    "lobby": "RIG",
+    "criteria": "Supervisor"
+  },
+  "krba_user": {
+    "password": "krba123",
+    "lobby": "KRBA",
+    "criteria": "CCC"
+  },
+  "usl_user": {
+    "password": "usl123",
+    "lobby": "USL",
+    "criteria": "Lobby"
+  },
+  "pnd_user": {
+    "password": "pnd123",
+    "lobby": "PND",
+    "criteria": "TLC"
+  },
+  "sdl_user": {
+    "password": "sdl123",
+    "lobby": "SDL",
+    "criteria": "Supervisor"
+  },
+  "bjri_user": {
+    "password": "bjri123",
+    "lobby": "BJRI",
+    "criteria": "CCC"
+  },
+  "sjq_user": {
+    "password": "sjq123",
+    "lobby": "SJQ",
+    "criteria": "Lobby"
+  },
+  "ccbsp": {
+    "password": "bsp123",
+    "lobby": "BSP",
+    "criteria": "Lobby"
+  },
+  "tlc": {
+    "password": "tlc123",
+    "lobby": "BSP",
+    "criteria": "Lobby"
+  },
+  "BSP": {
+    "password": "BSP123",
+    "lobby": "BSP",
+    "criteria": "CCC"
+  }
+}
